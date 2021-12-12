@@ -4,12 +4,12 @@ import qualified Data.Vector as Vec
 import Data.Vector hiding ((++))
 import Data.Char
 import Data.Maybe
-import Debug.Trace (traceShow, trace)
 import Data.Set as Set
 
 main = do
   octi <- parse <$> getContents
   print (part1 octi)
+  print (part2 octi)
 
 part1 :: Octi -> Int
 part1 octi =
@@ -17,10 +17,16 @@ part1 octi =
   $ Prelude.foldr
     (\_ (count, octi_) ->
       let (ncount, nocti) = step octi_
-       in trace ("old: " ++ show octi_ ++ "\nnew: " ++ show nocti) (ncount + count, nocti)
+       in (ncount + count, nocti)
     )
     (0, octi)
-    [0..0]
+    [1..100]
+
+part2 :: Octi -> Int
+part2 octi = fst $ until isAllZero cont (0, octi)
+ where
+  isAllZero (_, octi) = Vec.all (Vec.all (==0)) octi
+  cont (c, octi) = (c + 1, snd $ step octi)
 
 type Octi = Vector (Vector Int)
 
@@ -54,7 +60,9 @@ hasFlashed :: Position -> Bool
 hasFlashed pos = member (row pos, column pos) (flashes pos)
 
 checkAdjecent :: Position -> Position
-checkAdjecent pos = Vec.foldr check pos (adjecent pos)
+checkAdjecent pos = 
+    let Position { octi, flashes } = Vec.foldr check pos (adjecent pos)
+     in pos { octi, flashes }
  where check (row, column) pos_ = checkFlash pos_ { row, column }
 
 adjecent :: Position -> Vector (Int, Int)
